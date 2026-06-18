@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (
@@ -18,15 +18,12 @@ export function proxy(request: NextRequest) {
     request.cookies.get("__Secure-next-auth.session-token")
 
   if (!sessionToken) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = "/login"
-    loginUrl.search = ""
-    return NextResponse.redirect(loginUrl)
+    return NextResponse.redirect(new URL("/login", request.url))
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon\\.ico).*)"],
 }
