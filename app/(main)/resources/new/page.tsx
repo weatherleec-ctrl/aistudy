@@ -57,8 +57,12 @@ export default function NewResourcePage() {
       toast.success("자료가 등록되었습니다.")
       router.push("/resources")
     } else {
-      const err = await res.json()
-      toast.error(err.error ?? "오류가 발생했습니다.")
+      try {
+        const err = await res.json()
+        toast.error(err.error ?? "오류가 발생했습니다.")
+      } catch {
+        toast.error("오류가 발생했습니다.")
+      }
     }
     setLoading(false)
   }
