@@ -4,10 +4,9 @@ import type { NextRequest } from "next/server"
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // 인증 불필요 경로는 통과
   if (
     pathname.startsWith("/login") ||
-    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon")
   ) {
@@ -19,7 +18,10 @@ export function proxy(request: NextRequest) {
     request.cookies.get("__Secure-next-auth.session-token")
 
   if (!sessionToken) {
-    return NextResponse.redirect(new URL("/login", request.url))
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = "/login"
+    loginUrl.search = ""
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()
