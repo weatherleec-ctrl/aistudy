@@ -1,23 +1,10 @@
-import { getToken } from "next-auth/jwt"
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { withAuth } from "next-auth/middleware"
 
-export async function middleware(request: NextRequest) {
-  try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    })
-    if (!token) {
-      const loginUrl = new URL("/login", request.url)
-      return NextResponse.redirect(loginUrl)
-    }
-    return NextResponse.next()
-  } catch {
-    const loginUrl = new URL("/login", request.url)
-    return NextResponse.redirect(loginUrl)
-  }
-}
+export default withAuth({
+  pages: {
+    signIn: "/login",
+  },
+})
 
 export const config = {
   matcher: ["/((?!login|api/auth|_next/static|_next/image|favicon.ico|public).*)"],
