@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// role: ADMIN | MEMBER
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("MEMBER")
+  avatarUrl    String?
+  bio          String?
+  expertise    String?
+  githubUrl    String?
+  joinedAt     DateTime @default(now())
+  isActive     Boolean  @default(true)
+
+  trends        Trend[]
+  resources     Resource[]
+  events        Event[]        @relation("EventCreator")
+  attendances   Attendance[]
+  announcements Announcement[]
+  comments      Comment[]
+  tools         Tool[]
+  refSites      RefSite[]
+
+  @@map("users")
+}
+
+// category: LLM | VISION | MULTIMODAL | AGENT | TOOLS | RESEARCH | INDUSTRY | OTHER
+model Trend {
+  id          String   @id @default(cuid())
+  title       String
+  summary     String
+  content     String
+  sourceUrl   String?
+  category    String   @default("OTHER")
+  tags        String   @default("[]")
+  isPublished Boolean  @default(true)
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authorId String
+  author   User      @relation(fields: [authorId], references: [id])
+  comments Comment[]
+
+  @@map("trends")
+}
+
+// type: FILE | LINK | VIDEO | NOTION
+model Resource {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  type          String   @default("LINK")
+  url           String?
+  filePath      String?
+  fileName      String?
+  fileSize      Int?
+  mimeType      String?
+  tags          String   @default("[]")
+  downloadCount Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  uploaderId String
+  uploader   User   @relation(fields: [uploaderId], references: [id])
+
+  @@map("resources")
+}
+
+// eventType: STUDY | SEMINAR | WORKSHOP | MEETUP | PRESENTATION | OTHER
+model Event {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  location     String?
+  eventType    String   @default("STUDY")
+  startAt      DateTime
+  endAt        DateTime
+  isOnline     Boolean  @default(false)
+  meetingUrl   String?
+  maxAttendees Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  creatorId   String
+  creator     User         @relation("EventCreator", fields: [creatorId], references: [id])
+  attendances Attendance[]
+
+  @@map("events")
+}
+
+// status: ATTENDING | NOT_ATTENDING | MAYBE
+model Attendance {
+  id        String   @id @default(cuid())
+  status    String   @default("ATTENDING")
+  createdAt DateTime @default(now())
+
+  userId  String
+  eventId String
+  user    User   @relation(fields: [userId], references: [id])
+  event   Event  @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+  @@map("attendances")
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  isPinned    Boolean  @default(false)
+  isImportant Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  @@map("announcements")
+}
+
+// category: CHATBOT | CODING | IMAGE | VIDEO | AUDIO | PRODUCTIVITY | RESEARCH | DATA | OTHER
+model Tool {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  url         String
+  iconUrl     String?
+  category    String   @default("OTHER")
+  tags        String   @default("[]")
+  isPaid      Boolean  @default(false)
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  addedById String
+  addedBy   User   @relation(fields: [addedById], references: [id])
+
+  @@map("tools")
+}
+
+// category: AI | DEV | RESEARCH | DATASET | COMMUNITY | NEWS | OTHER
+model RefSite {
+  id          String   @id @default(cuid())
+  title       String
+  url         String
+  description String?
+  imageUrl    String?
+  category    String   @default("OTHER")
+  tags        String   @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  addedById String
+  addedBy   User   @relation(fields: [addedById], references: [id])
+
+  @@map("ref_sites")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String
+  trendId  String?
+  author   User   @relation(fields: [authorId], references: [id])
+  trend    Trend? @relation(fields: [trendId], references: [id])
+
+  @@map("comments")
+}
