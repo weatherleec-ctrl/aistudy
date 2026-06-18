@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (
@@ -18,7 +18,10 @@ export function middleware(request: NextRequest) {
     request.cookies.get("__Secure-next-auth.session-token")
 
   if (!sessionToken) {
-    return NextResponse.redirect(new URL("/login", request.url))
+    const url = request.nextUrl.clone()
+    url.pathname = "/login"
+    url.search = ""
+    return NextResponse.redirect(url)
   }
 
   return NextResponse.next()
